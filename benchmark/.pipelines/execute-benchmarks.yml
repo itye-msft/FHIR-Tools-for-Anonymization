@@ -1,0 +1,33 @@
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+- name: benchmarkJobType
+  type: string
+  values: [ dry, short, medium, long ]
+  default: dry
+
+variables:
+- name: JOB_TYPE
+  value: '${{ parameters.benchmarkJobType }}'
+- name: ARTIFACT_PATH
+  value: $(Build.ArtifactStagingDirectory)
+
+steps:
+  - task: DockerCompose@0
+    displayName: Start Benchmark tests
+    inputs:
+        action: Run services
+        dockerComposeFile: docker-compose.yml
+        buildImages: true
+        detached: false
+
+  - task: PublishBuildArtifacts@1
+    displayName: "Collect Results"
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'benchmark-artifacts'
+      publishLocation: 'Container'
+
